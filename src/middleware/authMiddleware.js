@@ -62,7 +62,6 @@ const authUserMiddleWare = async (req, res, next) => {
           throw new Error("User not found");
         }
         req.user = user; // Thiết lập req.user
-        console.log("decoded", decoded);
         next();
       } catch (error) {
         return res.status(401).json({

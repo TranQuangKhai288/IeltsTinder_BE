@@ -1,3 +1,4 @@
+const Chat = require("../models/ChatModel");
 const Message = require("../models/MessageModel");
 const User = require("../models/UserModel");
 
@@ -5,7 +6,7 @@ const allMessages = async (chatId) => {
   return new Promise(async (resolve, reject) => {
     try {
       const messages = await Message.find({ chat: chatId })
-        .populate("sender", "name pic email")
+        .populate("sender", "name avatar")
         .populate({
           path: "chat",
           populate: {
@@ -27,21 +28,31 @@ const allMessages = async (chatId) => {
 const sendMessage = async (senderId, content, chatId) => {
   return new Promise(async (resolve, reject) => {
     try {
-      let message = await Message.create({
-        sender: senderId,
-        content,
-        chat: chatId,
-      });
-      message = await message.populate("sender", "name pic email");
-      message = await User.populate(message, {
-        path: "chat.users",
-        select: "name pic email",
-      });
-      resolve({
-        status: "OK",
-        message: "SUCCESS",
-        data: message,
-      });
+      const ChatId = await Chat.findById(chatId);
+      console.log(ChatId, "ChatId");
+      if (!ChatId) {
+        console.log("Chat not found");
+        reject("Chat not found");
+      } else {
+        let message = await Message.create({
+          sender: senderId,
+          content,
+          chat: chatId,
+        });
+        message = await message.populate("sender", "name avatar");
+        message = await User.populate(message, {
+          path: "chat.users",
+          select: "name avatar",
+        });
+
+        ChatId.latestMessage = message;
+        await ChatId.save();
+        resolve({
+          status: "OK",
+          message: "SUCCESS",
+          data: message,
+        });
+      }
     } catch (e) {
       reject(e);
     }

@@ -73,7 +73,6 @@ const loginUser = (userLogin) => {
         id: checkUser.id,
         isAdmin: checkUser.isAdmin,
       });
-      console.log("access_token", access_token);
 
       resolve({
         status: "OK",

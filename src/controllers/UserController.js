@@ -144,7 +144,6 @@ const getUsers = asyncHandler(async (req, res) => {
 const getDetailsUser = async (req, res) => {
   try {
     const userId = req.params.id;
-    console.log("userId at get user ID", userId);
     if (!userId) {
       return res.status(200).json({
         status: "ERR",
@@ -306,6 +305,7 @@ const refreshToken = async (req, res) => {
     const response = await JwtService.refreshTokenJwtService(token);
     return res.status(200).json(response);
   } catch (e) {
+    console.log("e", e.message);
     return res.status(404).json({
       message: e,
     });
@@ -336,6 +336,5 @@ module.exports = {
   refreshToken,
   logoutUser,
   deleteMany,
-
   acceptFriendRequest,
 };
