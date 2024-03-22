@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 // Định nghĩa schema cho hình ảnh và video
 const mediaSchema = new Schema(
   {
-    type: { type: String, enum: ["image", "video"], required: true }, // Loại của phương tiện: hình ảnh hoặc video
+    type: { type: String, enum: ["image", "video", "audio"], required: true }, // Loại của phương tiện: hình ảnh hoặc video
     uri: { type: String, required: true }, // URL hoặc đường dẫn đến phương tiện
   },
   { _id: false } // Không cần ID riêng cho mỗi phương tiện
@@ -33,6 +33,7 @@ const postSchema = new Schema(
 );
 
 module.exports = {
+  Media: mongoose.model("Media", mediaSchema),
   Comment: mongoose.model("Comment", commentSchema),
   Post: mongoose.model("Post", postSchema),
 };

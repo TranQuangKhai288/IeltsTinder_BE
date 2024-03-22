@@ -6,10 +6,8 @@ const routes = require("./routes");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
-//const { app, server, io } = require("./socket/socket");
+const { app, server, io } = require("./socket/socket");
 
-const socketIo = require("socket.io");
-const app = express();
 dotenv.config();
 const port = process.env.PORT || 5001;
 
@@ -30,25 +28,6 @@ mongoose
     console.log(err);
   });
 
-const server = http.createServer(app);
-const io = socketIo(server, {
-  pingTimeout: 60000,
-  cors: {
-    origin: "http://localhost:3000",
-  },
-});
-
-io.on("connection", (socket) => {
-  console.log("A user connected");
-  socket.on("setup", (dataUser) => {
-    socket.join(dataUser._id);
-    socket.emit("connencted");
-  });
-
-  socket.on("disconnect", () => {
-    console.log("User disconnected");
-  });
-});
 server.listen(port, () => {
   console.log("Server is running in port: ", +port);
 });
