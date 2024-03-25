@@ -1,7 +1,8 @@
 const { Server } = require("socket.io");
 const http = require("http");
 const express = require("express");
-
+const Chat = require("../models/ChatModel");
+const User = require("../models/UserModel");
 const app = express();
 
 const server = http.createServer(app);
@@ -13,52 +14,50 @@ const io = new Server(server, {
   },
 });
 
-let users = [];
-
-const addUser = (userId, socketId) => {
-  console.log("addingUser");
-  !users.some((user) => user.userId === userId) &&
-    users.push({ userId, socketId });
-};
-
-const removeUser = (socketId) => {
-  users = users.filter((user) => user.socketId !== socketId);
-};
-
-const getUser = (userId) => {
-  return users.find((user) => user.userId === userId);
-};
-
 io.on("connection", (socket) => {
   //when connected
-  console.log("a user connected to socket.io", socket.id);
-
-  socket.on("addUser", (userId) => {
-    addUser(userId, socket.id);
-    io.emit("getUsers", users);
+  socket.on("setup", (userData) => {
+    socket.join(userData._id);
+    socket.emit("connected");
+    console.log("User connected", userData._id);
   });
 
-  //send and get message
-  socket.on("sendMessage", ({ senderId, receiverId, text }) => {
-    // Tìm người nhận theo ID
-    console.log("sendMessage", senderId, receiverId, text);
-    const receiver = getUser(receiverId);
-    if (receiver) {
-      // Gửi tin nhắn đến người nhận
-      io.to(receiver.socketId).emit("getMessage", {
-        senderId,
-        text,
-      });
-    } else {
-      console.log("Receiver not found");
-    }
+  //when in a room
+  socket.on("join-a-chat-room", (room) => {
+    socket.join(room);
+    console.log("User joined room BE", room);
+  });
+
+  //sent message
+  socket.on("new-message", (newMessageRecieved) => {
+    console.log("New message recieved: ", newMessageRecieved);
+    var chat = Chat.findById(newMessageRecieved.chat).populate("users");
+    chat.exec(function (err, chat) {
+      if (err) {
+        console.error("Error:", err);
+      } else {
+        if (chat) {
+          chat.users.forEach((user) => {
+            if (
+              user._id.toString() !== newMessageRecieved.sender._id.toString()
+            ) {
+              io.to(newMessageRecieved.chat).emit(
+                "receive-message",
+                newMessageRecieved
+              );
+              console.log("Message sent to: ", user._id);
+            }
+          });
+        } else {
+          console.log("Chat not found");
+        }
+      }
+    });
   });
 
   //when disconnected
   socket.on("disconnect", () => {
     console.log("user disconnected", socket.id);
-    removeUser(socket.id);
-    io.emit("getUsers", users);
   });
 });
 

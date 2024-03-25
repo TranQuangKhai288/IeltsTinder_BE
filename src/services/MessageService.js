@@ -6,12 +6,12 @@ const allMessages = async (chatId) => {
   return new Promise(async (resolve, reject) => {
     try {
       const messages = await Message.find({ chat: chatId })
-        .populate("sender", "name avatar")
+        .populate("sender", "name")
         .populate({
           path: "chat",
           populate: {
             path: "users",
-            select: "id name avatar",
+            select: "id name",
           },
         });
 
@@ -29,9 +29,7 @@ const sendMessage = async (senderId, content, chatId) => {
   return new Promise(async (resolve, reject) => {
     try {
       const ChatId = await Chat.findById(chatId);
-      console.log(ChatId, "ChatId");
       if (!ChatId) {
-        console.log("Chat not found");
         reject("Chat not found");
       } else {
         let message = await Message.create({
@@ -39,10 +37,10 @@ const sendMessage = async (senderId, content, chatId) => {
           content,
           chat: chatId,
         });
-        message = await message.populate("sender", "name avatar");
+        message = await message.populate("sender", "name");
         message = await User.populate(message, {
           path: "chat.users",
-          select: "name avatar",
+          select: "name",
         });
 
         ChatId.latestMessage = message;
