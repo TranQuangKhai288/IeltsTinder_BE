@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const PostService = require("../services/PostService");
 const User = require("../models/UserModel");
+const Post = require("../models/PostModel");
 //@description     Get all Post for a User
 //@route           GET /api/post/:userId
 //@access          Protected
@@ -30,10 +31,10 @@ const allPost = asyncHandler(async (req, res) => {
 const addPost = asyncHandler(async (req, res) => {
   const { content, media } = req.body;
 
-  if (!content) {
+  if (!media) {
     return res.status(400).json({
       status: "ERR",
-      message: "content is required",
+      message: "Media is required",
     });
   }
 
@@ -63,7 +64,7 @@ const allComments = asyncHandler(async (req, res) => {
 //@route           POST /api/post/comment/
 //@access          Protected
 const addComment = asyncHandler(async (req, res) => {
-  const { content } = req.body;
+  const { content, media } = req.body;
   const postId = req.params.postId;
 
   if (!content || !postId) {
@@ -75,7 +76,8 @@ const addComment = asyncHandler(async (req, res) => {
     const response = await PostService.addComment(
       req.user._id,
       content,
-      postId
+      postId,
+      media
     );
     return res.status(200).json(response);
   } catch (error) {

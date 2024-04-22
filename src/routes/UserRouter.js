@@ -10,7 +10,7 @@ router.post("/register", userController.createUser);
 router.post("/login", userController.loginUser);
 router.post("/log-out", userController.logoutUser);
 
-router.put("/update-user/:id", authUserMiddleWare, userController.updateUser);
+router.put("/update-user", authUserMiddleWare, userController.updateUser);
 router.delete("/delete-user/:id", authMiddleWare, userController.deleteUser);
 router.get("/", authUserMiddleWare, userController.getUsers);
 router.get(
@@ -29,6 +29,18 @@ router.post(
   "/accept-friend-request/",
   authUserMiddleWare,
   userController.acceptFriendRequest
+);
+
+router.get(
+  "/get-friend-request/",
+  authUserMiddleWare,
+  userController.getAllFriendRequests
+);
+
+router.post(
+  "/reject-friend-request/",
+  authUserMiddleWare,
+  userController.rejectFriendRequest
 );
 
 router.post("/refresh-token", userController.refreshToken);

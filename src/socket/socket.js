@@ -28,9 +28,10 @@ io.on("connection", (socket) => {
     console.log("User joined room BE", room);
   });
 
+  socket.on("typing", (room) => socket.in(room).emit("typing"));
+  socket.on("stop-typing", (room) => socket.in(room).emit("stop-typing"));
   //sent message
   socket.on("new-message", (newMessageRecieved) => {
-    console.log("New message recieved: ", newMessageRecieved);
     var chat = Chat.findById(newMessageRecieved.chat).populate("users");
     chat.exec(function (err, chat) {
       if (err) {
@@ -52,6 +53,37 @@ io.on("connection", (socket) => {
           console.log("Chat not found");
         }
       }
+    });
+  });
+
+  socket.on("call", (data) => {
+    let calleeId = data.calleeId;
+    let rtcMessage = data.rtcMessage;
+
+    socket.to(calleeId).emit("newCall", {
+      callerId: socket.user,
+      rtcMessage: rtcMessage,
+    });
+  });
+
+  socket.on("answerCall", (data) => {
+    let callerId = data.callerId;
+    rtcMessage = data.rtcMessage;
+
+    socket.to(callerId).emit("callAnswered", {
+      callee: socket.user,
+      rtcMessage: rtcMessage,
+    });
+  });
+
+  socket.on("ICEcandidate", (data) => {
+    console.log("ICEcandidate data.calleeId", data.calleeId);
+    let calleeId = data.calleeId;
+    let rtcMessage = data.rtcMessage;
+
+    socket.to(calleeId).emit("ICEcandidate", {
+      sender: socket.user,
+      rtcMessage: rtcMessage,
     });
   });
 

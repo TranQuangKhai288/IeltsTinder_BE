@@ -8,7 +8,6 @@ const createExercise = async (newExercise) => {
       const checkExercise = await Exercise.findOne({
         title,
       });
-      console.log(checkExercise, "checkExercise");
       if (checkExercise !== null) {
         resolve({
           status: "ERR",
@@ -28,7 +27,6 @@ const createExercise = async (newExercise) => {
       // Add questions to the exercise
       for (const questionData of questions) {
         const { type, question, media, options, correctOption } = questionData;
-        console.log(questionData, "questionData");
         const newQuestion = new Question({
           exerciseId: exercise._id,
           type,
@@ -192,17 +190,20 @@ const checkAnswer = async (exerciseId, answer) => {
           result.push({
             questionId: question._id,
             isCorrect: false, // No answer provided for this question
+            correctIndex: question.correctOption,
           });
         } else {
           if (parseInt(correspondingAnswer.answer) === question.correctOption) {
             result.push({
               questionId: question._id,
               isCorrect: true,
+              correctIndex: question.correctOption,
             });
           } else {
             result.push({
               questionId: question._id,
               isCorrect: false,
+              correctIndex: question.correctOption,
             });
           }
         }

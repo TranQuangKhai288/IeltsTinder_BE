@@ -11,6 +11,7 @@ const userSchema = new Schema(
     avatar: { type: String },
     phone: { type: String },
     friends: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    posts: { type: Number, default: 0 },
     notifications: [{ type: Schema.Types.ObjectId, ref: "Notification" }],
     level: { type: Number },
     exercises: [{ type: Schema.Types.ObjectId, ref: "Exercise" }],
