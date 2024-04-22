@@ -30,7 +30,7 @@ const allPost = asyncHandler(async (req, res) => {
 
 const addPost = asyncHandler(async (req, res) => {
   const { content, media } = req.body;
-
+  console.log(content, "content");
   if (!media) {
     return res.status(400).json({
       status: "ERR",

@@ -38,9 +38,6 @@ const addPost = async (userId, content, media) => {
       if (!user) {
         reject(new Error("User not found"));
       }
-      console.log(media, "media");
-      console.log(content, "content");
-      console.log(userId, "userId");
 
       const createdMedia = [];
 
