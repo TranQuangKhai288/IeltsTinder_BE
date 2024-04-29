@@ -6,7 +6,7 @@ const Post = require("../models/PostModel");
 //@route           GET /api/post/:userId
 //@access          Protected
 
-const allPost = asyncHandler(async (req, res) => {
+const allPostOfAUser = asyncHandler(async (req, res) => {
   //check if the user is valid
   const user = await User.findById(req.params.userId);
   if (!user) {
@@ -16,7 +16,7 @@ const allPost = asyncHandler(async (req, res) => {
     });
   }
   try {
-    const response = await PostService.allPost(req.params.userId);
+    const response = await PostService.allPostOfAUser(req.params.userId);
     return res.status(200).json(response);
   } catch (error) {
     res.status(400);
@@ -68,7 +68,7 @@ const addComment = asyncHandler(async (req, res) => {
   const postId = req.params.postId;
 
   if (!content || !postId) {
-    console.log("Invalid data passed into request");
+    console.log("Content is required");
     return res.sendStatus(400);
   }
 
@@ -86,9 +86,20 @@ const addComment = asyncHandler(async (req, res) => {
   }
 });
 
+const allPost = asyncHandler(async (req, res) => {
+  try {
+    const response = await PostService.allPost();
+    return res.status(200).json(response);
+  } catch (error) {
+    res.status(400);
+    throw new Error(error.message);
+  }
+});
+
 module.exports = {
-  allPost,
+  allPostOfAUser,
   addPost,
   allComments,
   addComment,
+  allPost,
 };

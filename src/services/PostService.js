@@ -1,7 +1,7 @@
 const { Comment, Post, Media } = require("../models/PostModel");
 const User = require("../models/UserModel");
 
-const allPost = async (userId) => {
+const allPostOfAUser = async (userId) => {
   return new Promise(async (resolve, reject) => {
     try {
       const posts = await Post.find({ user: userId })
@@ -52,7 +52,9 @@ const addPost = async (userId, content, media) => {
         media: createdMedia,
       });
       // plus 1 post to user
-      user.posts = user.posts ? user.posts + 1 : user.posts;
+      const numberofPost = await Post.find({ user: userId }).countDocuments();
+      user.posts = numberofPost;
+      //user.posts = user.posts ? user.posts + 1 : user.posts;
       post = await post.populate("user", "name");
       await user.save();
       resolve({
@@ -105,9 +107,11 @@ const addComment = async (userId, content, postId, media) => {
 
     const createdMedia = [];
 
-    for (const m of media) {
-      const newMedia = await Media.create(m);
-      createdMedia.push(newMedia._id);
+    if (media) {
+      for (const m of media) {
+        const newMedia = await Media.create(m);
+        createdMedia.push(newMedia._id);
+      }
     }
 
     try {
@@ -118,7 +122,11 @@ const addComment = async (userId, content, postId, media) => {
         media: createdMedia,
       });
 
-      post.comments.push(comment);
+      const countComment = await Comment.find({
+        post: postId,
+      }).countDocuments();
+      console.log(countComment, "countComment");
+      post.countComment = countComment;
       await post.save();
       resolve({
         status: "OK",
@@ -131,9 +139,33 @@ const addComment = async (userId, content, postId, media) => {
   });
 };
 
+const allPost = async () => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const posts = await Post.find()
+        .populate({
+          path: "user",
+          select: "name avatar",
+        })
+        .populate({
+          path: "media",
+        });
+
+      resolve({
+        status: "OK",
+        message: "SUCCESS",
+        data: posts,
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
 module.exports = {
   addPost,
-  allPost,
+  allPostOfAUser,
   allComments,
   addComment,
+  allPost,
 };
