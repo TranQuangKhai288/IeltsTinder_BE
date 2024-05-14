@@ -19,7 +19,12 @@ io.on("connection", (socket) => {
   socket.on("setup", (userData) => {
     socket.join(userData._id);
     socket.emit("connected");
-    console.log("User connected", userData._id);
+    console.log(
+      "User connected with user ID:",
+      userData._id,
+      "and socket ID:",
+      socket.id
+    );
   });
 
   //when in a room
@@ -28,7 +33,10 @@ io.on("connection", (socket) => {
     console.log("User joined room BE", room);
   });
 
-  socket.on("typing", (room) => socket.in(room).emit("typing"));
+  socket.on("typing", (room) => {
+    console.log("typing");
+    socket.in(room).emit("typing");
+  });
   socket.on("stop-typing", (room) => socket.in(room).emit("stop-typing"));
   //sent message
   socket.on("new-message", (newMessageRecieved) => {
@@ -42,6 +50,7 @@ io.on("connection", (socket) => {
             if (
               user._id.toString() !== newMessageRecieved.sender._id.toString()
             ) {
+              console.log("chat seing");
               io.to(newMessageRecieved.chat).emit(
                 "receive-message",
                 newMessageRecieved
@@ -56,24 +65,30 @@ io.on("connection", (socket) => {
     });
   });
 
-  socket.on("call", (data) => {
-    let calleeId = data.calleeId;
-    let rtcMessage = data.rtcMessage;
+  socket.on("video-call", (data) => {
+    const { chatRoomId, callerId } = data;
+    console.log("video-call", data);
+    // Tạo một phòng gọi mới giữa người gọi và người nhận cuộc gọi
+    const callRoom = `${callerId}-${chatRoomId}`;
+    socket.join(callRoom);
+    //Thông báo cho người nhận khác trong nhóm về cuộc gọi
 
-    socket.to(calleeId).emit("newCall", {
-      callerId: socket.user,
-      rtcMessage: rtcMessage,
-    });
+    socket.broadcast
+      .to(chatRoomId)
+      .emit("incoming-call", { callRoomId: callRoom, callerId });
   });
 
-  socket.on("answerCall", (data) => {
-    let callerId = data.callerId;
-    rtcMessage = data.rtcMessage;
+  socket.on("accept-call", (data) => {
+    const { callRoomId } = data;
 
-    socket.to(callerId).emit("callAnswered", {
-      callee: socket.user,
-      rtcMessage: rtcMessage,
-    });
+    console.log("accept-call", data);
+
+    // Tìm phòng gọi giữa hai người và chuyển cả hai vào phòng đó
+
+    socket.join(callRoomId);
+
+    // Gửi sự kiện "accepted" và luồng dữ liệu tới cả hai người trong phòng gọi
+    io.to(callRoomId).emit("accepted");
   });
 
   socket.on("ICEcandidate", (data) => {
