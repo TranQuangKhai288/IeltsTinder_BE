@@ -323,6 +323,7 @@ const rejectFriendRequest = async (req, res) => {
 const refreshToken = async (req, res) => {
   try {
     let token = req.cookies.refresh_token;
+    console.log("refreshToken", token);
     if (!token) {
       return res.status(200).json({
         status: "ERR",
@@ -330,6 +331,7 @@ const refreshToken = async (req, res) => {
       });
     }
     const response = await JwtService.refreshTokenJwtService(token);
+    console.log("response", response);
     return res.status(200).json(response);
   } catch (e) {
     console.log("e", e.message);

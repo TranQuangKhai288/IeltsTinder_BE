@@ -3,6 +3,7 @@ const http = require("http");
 const express = require("express");
 const Chat = require("../models/ChatModel");
 const User = require("../models/UserModel");
+const { ExpressPeerServer } = require("peer");
 const app = express();
 
 const server = http.createServer(app);
@@ -13,98 +14,117 @@ const io = new Server(server, {
     methods: ["GET", "POST"],
   },
 });
+const peerServer = ExpressPeerServer(server, {
+  debug: true,
+  path: "/",
+});
+
+app.use("/mypeer", peerServer);
 
 io.on("connection", (socket) => {
-  //when connected
   socket.on("setup", (userData) => {
     socket.join(userData._id);
     socket.emit("connected");
-    console.log(
-      "User connected with user ID:",
-      userData._id,
-      "and socket ID:",
-      socket.id
-    );
   });
 
-  //when in a room
   socket.on("join-a-chat-room", (room) => {
     socket.join(room);
-    console.log("User joined room BE", room);
   });
 
   socket.on("typing", (room) => {
-    console.log("typing");
-    socket.in(room).emit("typing");
+    socket.to(room).emit("typing");
   });
-  socket.on("stop-typing", (room) => socket.in(room).emit("stop-typing"));
-  //sent message
-  socket.on("new-message", (newMessageRecieved) => {
-    var chat = Chat.findById(newMessageRecieved.chat).populate("users");
-    chat.exec(function (err, chat) {
-      if (err) {
-        console.error("Error:", err);
-      } else {
-        if (chat) {
-          chat.users.forEach((user) => {
-            if (
-              user._id.toString() !== newMessageRecieved.sender._id.toString()
-            ) {
-              console.log("chat seing");
-              io.to(newMessageRecieved.chat).emit(
-                "receive-message",
-                newMessageRecieved
-              );
-              console.log("Message sent to: ", user._id);
-            }
-          });
-        } else {
-          console.log("Chat not found");
+
+  socket.on("stop-typing", (room) => {
+    socket.to(room).emit("stop-typing");
+  });
+
+  socket.on("new-message", async (newMessageReceived) => {
+    try {
+      const chat = await Chat.findById(newMessageReceived.chat).populate(
+        "users"
+      );
+      if (!chat) return;
+
+      chat.users.forEach((user) => {
+        if (user._id.toString() !== newMessageReceived.sender._id.toString()) {
+          socket
+            .to(user._id.toString())
+            .emit("receive-message", newMessageReceived);
         }
-      }
-    });
+      });
+    } catch (error) {
+      console.error("Error handling new message:", error);
+    }
   });
 
-  socket.on("video-call", (data) => {
-    const { chatRoomId, callerId } = data;
-    console.log("video-call", data);
-    // Tạo một phòng gọi mới giữa người gọi và người nhận cuộc gọi
-    const callRoom = `${callerId}-${chatRoomId}`;
-    socket.join(callRoom);
-    //Thông báo cho người nhận khác trong nhóm về cuộc gọi
-
-    socket.broadcast
-      .to(chatRoomId)
-      .emit("incoming-call", { callRoomId: callRoom, callerId });
-  });
-
-  socket.on("accept-call", (data) => {
-    const { callRoomId } = data;
-
-    console.log("accept-call", data);
-
-    // Tìm phòng gọi giữa hai người và chuyển cả hai vào phòng đó
-
+  socket.on("new-call", async (data) => {
+    const { chatRoomId, callerId, rtcMessage } = data;
+    const callRoomId = `${callerId}-${chatRoomId}`;
+    console.log(chatRoomId);
     socket.join(callRoomId);
-
-    // Gửi sự kiện "accepted" và luồng dữ liệu tới cả hai người trong phòng gọi
-    io.to(callRoomId).emit("accepted");
-  });
-
-  socket.on("ICEcandidate", (data) => {
-    console.log("ICEcandidate data.calleeId", data.calleeId);
-    let calleeId = data.calleeId;
-    let rtcMessage = data.rtcMessage;
-
-    socket.to(calleeId).emit("ICEcandidate", {
-      sender: socket.user,
+    //find the use in chat room:
+    const chatRoom = await Chat.findById(chatRoomId);
+    const userIds = chatRoom.users.map((user) => user._id.toString());
+    const receiverId = userIds.find((id) => id !== callerId);
+    socket.to(receiverId.toString()).emit("incoming-call", {
+      callRoomId: callRoomId,
+      callerId: callerId,
       rtcMessage: rtcMessage,
     });
   });
 
-  //when disconnected
+  socket.on("accept-call", (data) => {
+    const { callRoomId, rtcMessage } = data;
+    socket.join(callRoomId);
+    socket.broadcast.to(callRoomId).emit("accepted", {
+      rtcMessage: rtcMessage,
+    });
+  });
+
+  socket.on("reject-call", (data) => {
+    const { callRoomId, rtcMessage } = data;
+    socket.join(callRoomId);
+    socket.broadcast.to(callRoomId).emit("rejected");
+  });
+
+  socket.on("end-call", (data) => {
+    const { callRoomId, rtcMessage } = data;
+    socket.join(callRoomId);
+    socket.broadcast.to(callRoomId).emit("rejected");
+  });
+
+  socket.on("rtc-message", (data) => {
+    const { callRoomId, type, sdp, candidate } = data;
+
+    // Kiểm tra dữ liệu đầu vào
+    if (!callRoomId || (!sdp && !candidate)) {
+      console.error("Invalid rtc-message data:", data);
+      return;
+    }
+
+    // Kiểm tra kiểu tin nhắn
+    if (type === "offer" || type === "answer") {
+      if (!sdp || typeof sdp !== "object") {
+        console.error("Invalid SDP data:", sdp);
+        return;
+      }
+    } else if (type === "candidate") {
+      if (!candidate || typeof candidate !== "object") {
+        console.error("Invalid ICE candidate data:", candidate);
+        return;
+      }
+    } else {
+      console.error("Invalid rtc-message type:", type);
+      return;
+    }
+
+    // Phát tin nhắn đến phòng cuộc gọi
+    io.to(callRoomId).emit("rtc-message", data);
+  });
+
   socket.on("disconnect", () => {
-    console.log("user disconnected", socket.id);
+    console.log(`User disconnected: ${socket.id}`);
   });
 });
 

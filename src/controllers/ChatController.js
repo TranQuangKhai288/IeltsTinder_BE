@@ -11,6 +11,7 @@ const ChatService = require("../services/ChatService");
 const accessChat = async (req, res) => {
   try {
     const { userId } = req.body;
+    console.log("userId", userId);
 
     if (!userId) {
       return res.status(200).json({

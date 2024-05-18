@@ -12,16 +12,20 @@ const accessChat = async (currentUserId, targetUserId) => {
           { users: { $elemMatch: { $eq: targetUserId } } },
         ],
       })
-        .populate("users", "-password")
-        .populate("latestMessage");
+        .populate("latestMessage")
+        .populate("users", "name avatar email");
 
       isChat = await User.populate(isChat, {
         path: "latestMessage.sender",
-        select: "name pic email",
+        select: "name email",
       });
 
       if (isChat.length > 0) {
-        resolve(isChat[0]);
+        resolve({
+          status: "OK",
+          message: "SUCESS",
+          data: isChat[0],
+        });
       } else {
         const chatData = {
           chatName: "sender",

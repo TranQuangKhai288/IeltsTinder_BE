@@ -11,13 +11,6 @@ const allPostOfAUser = async (userId) => {
         })
         .populate({
           path: "media",
-        })
-        .populate({
-          path: "comments",
-          populate: {
-            path: "user",
-            select: "name",
-          },
         });
 
       resolve({
