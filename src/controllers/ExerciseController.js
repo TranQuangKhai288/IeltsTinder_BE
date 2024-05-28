@@ -76,6 +76,23 @@ const getQuestionOfExercise = asyncHandler(async (req, res) => {
   }
 });
 
+const getQuestionById = asyncHandler(async (req, res) => {
+  const questionId = req.params.questionId;
+  if (!questionId) {
+    return res.status(400).json({
+      status: "ERR",
+      message: "questionId is required",
+    });
+  }
+  try {
+    const response = await ExerciseService.getQuestionById(questionId);
+    return res.status(200).json(response);
+  } catch (error) {
+    res.status(400);
+    throw new Error(error.message);
+  }
+});
+
 //@description     update an exercise
 //@route           PUT /api/exercise/:exerciseId
 //@access          Protected
@@ -137,11 +154,30 @@ const checkAnswer = asyncHandler(async (req, res) => {
   }
 });
 
+const getAnswerForAQuestion = asyncHandler(async (req, res) => {
+  const questionId = req.params.questionId;
+  if (!questionId) {
+    return res.status(400).json({
+      status: "ERR",
+      message: "questionId is required",
+    });
+  }
+  try {
+    const response = await ExerciseService.getAnswerForAQuestion(questionId);
+    return res.status(200).json(response);
+  } catch (error) {
+    res.status(400);
+    throw new Error(error.message);
+  }
+});
+
 module.exports = {
   createExercise,
   getAllExercise,
   getDetailsExercise,
   getQuestionOfExercise,
+  getQuestionById,
+  getAnswerForAQuestion,
   updateExercise,
   deleteExercise,
   checkAnswer,

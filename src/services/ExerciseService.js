@@ -105,8 +105,31 @@ const getQuestionOfExercise = async (exerciseId) => {
   });
 };
 
+const getQuestionById = async (questionId) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const question = await Question.findById(questionId).populate(
+        "exerciseId",
+        "title"
+      );
+      if (!question) {
+        reject(new Error("Question not found"));
+        return;
+      }
+      resolve({
+        status: "OK",
+        message: "SUCCESS",
+        data: question,
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
 const updateExercise = async (exerciseId, newExercise) => {
   const { title, description, questions } = newExercise;
+  console.log("newExercise", newExercise);
   return new Promise(async (resolve, reject) => {
     try {
       const exercise = await Exercise.findById(exerciseId);
@@ -115,11 +138,16 @@ const updateExercise = async (exerciseId, newExercise) => {
         return;
       }
 
-      exercise.title = title;
-      exercise.description = description;
+      if (title) {
+        exercise.title = title;
+      }
+      if (description) {
+        exercise.description = description;
+      }
       if (questions && questions.length > 0) {
         exercise.questions = questions;
       }
+
       await exercise.save();
       resolve({
         status: "OK",
@@ -219,11 +247,35 @@ const checkAnswer = async (exerciseId, answer) => {
   });
 };
 
+const getAnswerForAQuestion = async (questionId) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const question = await Question.findById(questionId).populate(
+        "exerciseId",
+        "title"
+      );
+      if (!question) {
+        reject(new Error("Question not found"));
+        return;
+      }
+      resolve({
+        status: "OK",
+        message: "SUCCESS",
+        data: question,
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
 module.exports = {
   createExercise,
   getAllExercise,
   getDetailsExercise,
   getQuestionOfExercise,
+  getQuestionById,
+  getAnswerForAQuestion,
   updateExercise,
   deleteExercise,
   checkAnswer,

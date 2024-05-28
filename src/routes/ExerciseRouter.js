@@ -30,6 +30,12 @@ router.get(
   ExerciseController.getQuestionOfExercise
 );
 
+router.get(
+  "/get-a-questions/:questionId",
+  //authMiddleWare,
+  ExerciseController.getQuestionById
+);
+
 router.put(
   "/update-exercise/:exerciseId",
   //authMiddleWare,
@@ -48,6 +54,13 @@ router.post(
   "/check-answer/:exerciseId",
   //authMiddleWare,
   ExerciseController.checkAnswer
+);
+
+//get the correct answer of the question
+router.get(
+  "/get-answer-question/:questionId",
+  //authMiddleWare,
+  ExerciseController.getAnswerForAQuestion
 );
 
 module.exports = router;

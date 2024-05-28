@@ -323,7 +323,7 @@ const rejectFriendRequest = async (req, res) => {
 const refreshToken = async (req, res) => {
   try {
     let token = req.cookies.refresh_token;
-    console.log("refreshToken", token);
+    console.log("refreshToken", req.cookies);
     if (!token) {
       return res.status(200).json({
         status: "ERR",

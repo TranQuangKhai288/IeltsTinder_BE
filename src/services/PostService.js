@@ -89,42 +89,45 @@ const allComments = async (postId) => {
 
 const addComment = async (userId, content, postId, media) => {
   return new Promise(async (resolve, reject) => {
-    const post = await Post.findById(postId);
-
-    if (!post) {
-      resolve({
-        status: "ERR",
-        message: "Post not found",
-      });
-    }
-
-    const createdMedia = [];
-
-    if (media) {
-      for (const m of media) {
-        const newMedia = await Media.create(m);
-        createdMedia.push(newMedia._id);
-      }
-    }
-
     try {
-      let comment = await Comment.create({
+      const post = await Post.findById(postId);
+
+      if (!post) {
+        return resolve({
+          status: "ERR",
+          message: "Post not found",
+        });
+      }
+
+      const createdMedia = [];
+
+      if (media) {
+        for (const m of media) {
+          const newMedia = await Media.create(m);
+          createdMedia.push(newMedia._id);
+        }
+      }
+
+      const comment = await Comment.create({
         user: userId,
         content,
         post: postId,
         media: createdMedia,
       });
 
-      const countComment = await Comment.find({
-        post: postId,
-      }).countDocuments();
-      console.log(countComment, "countComment");
+      const commentData = await Comment.findById(comment._id)
+        .populate("user", "name avatar")
+        .populate("media");
+
+      const countComment = await Comment.countDocuments({ post: postId });
+
       post.countComment = countComment;
       await post.save();
+
       resolve({
         status: "OK",
         message: "SUCCESS",
-        data: comment,
+        data: commentData,
       });
     } catch (e) {
       reject(e);
