@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 // Định nghĩa schema cho hình ảnh và video
 const mediaSchema = new Schema({
   type: { type: String, enum: ["image", "video", "audio"] }, // Loại của phương tiện: hình ảnh hoặc video
-  URL: { type: String, required: true }, // URL hoặc đường dẫn đến phương tiện
+  URL: { type: String }, // URL hoặc đường dẫn đến phương tiện
 });
 
 const commentSchema = new Schema({

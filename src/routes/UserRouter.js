@@ -18,6 +18,11 @@ router.get(
   authUserMiddleWare,
   userController.getDetailsUser
 );
+router.get(
+  "/getAll",
+  //authMiddleWare,
+  userController.getAllUser
+);
 
 router.post(
   "/send-friend-request/",

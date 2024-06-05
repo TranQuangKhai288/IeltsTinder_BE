@@ -13,7 +13,7 @@ const userSchema = new Schema(
     friends: [{ type: Schema.Types.ObjectId, ref: "User" }],
     posts: { type: Number, default: 0 },
     notifications: [{ type: Schema.Types.ObjectId, ref: "Notification" }],
-    level: { type: Number },
+    level: { type: Number, default: 0 },
     exercises: [{ type: Schema.Types.ObjectId, ref: "Exercise" }],
     schedule: [{ type: String }],
     isAdmin: { type: Boolean, default: false },

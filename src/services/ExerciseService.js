@@ -8,6 +8,11 @@ const createExercise = async (newExercise) => {
       const checkExercise = await Exercise.findOne({
         title,
       });
+      const exercise = new Exercise({
+        title,
+        description,
+        questions: [], //questions will be an array of objects
+      });
       if (checkExercise !== null) {
         resolve({
           status: "ERR",
@@ -16,27 +21,34 @@ const createExercise = async (newExercise) => {
         });
         return;
       }
-      const exercise = new Exercise({
-        title,
-        description,
-        questions: [], //questions will be an array of objects
-      });
 
       await exercise.save();
 
       // Add questions to the exercise
       for (const questionData of questions) {
         const { type, question, media, options, correctOption } = questionData;
-        const newQuestion = new Question({
-          exerciseId: exercise._id,
-          type,
-          question,
-          media,
-          options,
-          correctOption,
-        });
-        await newQuestion.save();
-        exercise.questions.push(newQuestion._id);
+        if (media[0]?.type === "" || !media[0]?.type || !media) {
+          const newQuestion = new Question({
+            exerciseId: exercise._id,
+            type,
+            question,
+            options,
+            correctOption,
+          });
+          await newQuestion.save();
+          exercise.questions.push(newQuestion._id);
+        } else {
+          const newQuestion = new Question({
+            exerciseId: exercise._id,
+            type,
+            question,
+            media,
+            options,
+            correctOption,
+          });
+          await newQuestion.save();
+          exercise.questions.push(newQuestion._id);
+        }
       }
       await exercise.save();
 

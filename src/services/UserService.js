@@ -53,7 +53,7 @@ const loginUser = (userLogin) => {
       if (checkUser === null) {
         resolve({
           status: "ERR",
-          message: "User không tồn tại",
+          message: "User is does not exist",
         });
       }
       const comparePassword = bcrypt.compareSync(password, checkUser.password);
@@ -174,11 +174,28 @@ const getDetailsUser = (id) => {
   });
 };
 
+//getAllUser tested
+const getAllUser = () => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const allUser = await User.find().sort({ createdAt: -1, updatedAt: -1 });
+      resolve({
+        status: "OK",
+        message: "Success",
+        data: allUser,
+      });
+    } catch (e) {
+      //reject(e);
+    }
+  });
+};
+
 module.exports = {
   createUser,
   loginUser,
   updateUser,
   deleteUser,
   getDetailsUser,
+  getAllUser,
   deleteManyUser,
 };
