@@ -96,10 +96,37 @@ const allPost = asyncHandler(async (req, res) => {
   }
 });
 
+const putLike = asyncHandler(async (req, res) => {
+  try {
+    console.log(req.user._id, "req.user._id");
+    console.log(req.params.postId, "req.params.postId");
+    const response = await PostService.putLike(req.user._id, req.params.postId);
+    return res.status(200).json(response);
+  } catch (error) {
+    res.status(400);
+    throw new Error(error.message);
+  }
+});
+
+const deleteLike = asyncHandler(async (req, res) => {
+  try {
+    const response = await PostService.deleteLike(
+      req.user._id,
+      req.params.postId
+    );
+    return res.status(200).json(response);
+  } catch (error) {
+    res.status(400);
+    throw new Error(error.message);
+  }
+});
+
 module.exports = {
   allPostOfAUser,
   addPost,
   allComments,
   addComment,
   allPost,
+  putLike,
+  deleteLike,
 };

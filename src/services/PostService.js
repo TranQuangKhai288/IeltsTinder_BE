@@ -158,10 +158,64 @@ const allPost = async () => {
   });
 };
 
+const putLike = async (userId, postId) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const post = await Post.findById(postId);
+      if (!post) {
+        resolve({
+          status: "ERR",
+          message: "Post not found",
+        });
+        return;
+      }
+
+      post.countLike = post.countLike ? post.countLike + 1 : 1;
+
+      await post.save();
+      resolve({
+        status: "OK",
+        message: "SUCCESS",
+        data: post,
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
+const deleteLike = async (userId, postId) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const post = await Post.findById(postId);
+      if (!post) {
+        resolve({
+          status: "ERR",
+          message: "Post not found",
+        });
+        return;
+      }
+
+      post.countLike = post.countLike ? post.countLike - 1 : 0;
+
+      await post.save();
+      resolve({
+        status: "OK",
+        message: "SUCCESS",
+        data: post,
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
 module.exports = {
   addPost,
   allPostOfAUser,
   allComments,
   addComment,
   allPost,
+  putLike,
+  deleteLike,
 };

@@ -237,8 +237,6 @@ const acceptFriendRequest = async (req, res) => {
   const receiverId = req.user._id; // ID của người gửi kết bạn
   const { senderId } = req.body; // ID của người nhận kết bạn
 
-  console.log("senderId", senderId);
-  console.log("receiverId", receiverId);
   try {
     const sender = await User.findById(senderId);
     const receiver = await User.findById(receiverId);
@@ -305,10 +303,9 @@ const rejectFriendRequest = async (req, res) => {
         .json({ status: "ERROR", message: "Friend request not found" });
     }
 
-    //update status of friend request
-    friendRequest.status = "reject";
-    //save friend request
-    await friendRequest.save();
+    //delete friend request
+    await friendRequest.delete();
+
     return res.status(200).json({
       status: "OK",
       message: "Friend request reject successfully",
